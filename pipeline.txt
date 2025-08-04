@@ -1,0 +1,5 @@
+câu tiếng hán -> process -> câu tiếng việt trong sách
+
+    + câu tiếng hán -> dịch sang tiếng việt -> embedding -> (1)
+    + câu tiếng việt gốc trong sách -> embedding -> (2)
+    + đối chiếu: lấy (1) so khớp với (2) -> chọn ngưỡng -> ra được câu dịch tiếng việt

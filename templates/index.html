@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống dịch Hán-Việt</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='1.2') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">
+                    <i class="fas fa-language"></i>
+                    Hệ thống dịch Hán-Việt
+                </h1>
+                <!-- <p class="subtitle">Sử dụng AI để tìm câu tiếng Việt tương ứng từ câu tiếng Hán</p> -->
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Search Form -->
+            <div class="search-section">
+                <div class="search-card">
+                    <h2 class="search-title">
+                        <i class="fas fa-search"></i>
+                        Dịch câu tiếng Hán sang câu tiếng Việt
+                    </h2>
+                    
+                    <form id="searchForm" class="search-form">
+                        <div class="input-group">
+                            <label for="hanInput" class="input-label">Câu tiếng Hán:</label>
+                            <div class="input-wrapper">
+                                <textarea 
+                                    id="hanInput" 
+                                    name="query" 
+                                    class="search-input"
+                                    placeholder="Nhập câu tiếng Hán cần dịch..."
+                                    rows="3"
+                                    required
+                                ></textarea>
+                                <button type="button" id="clearBtn" class="clear-btn" title="Xóa">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="search-btn" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                            <span>Dịch</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading hidden">
+                <div class="loading-spinner"></div>
+                <p>Đang dịch...</p>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="results-section hidden">
+                <div class="results-header">
+                    <h2 class="results-title">
+                        <i class="fas fa-list"></i>
+                        Kết quả dịch
+                    </h2>
+                    <div class="results-count">
+                        <span id="resultCount">0</span> kết quả
+                    </div>
+                </div>
+
+                <!-- Best Result -->
+                <div id="bestResult" class="best-result hidden">
+                    <div class="best-result-header">
+                        <h3>
+                            <i class="fas fa-star"></i>
+                            Kết quả trả về
+                        </h3>
+                        <!-- <div class="score-badge">
+                            <span id="bestScore">0.0000</span>
+                        </div> -->
+                    </div>
+                    <div class="result-content">
+                        <div class="result-item">
+                            <label>Tiếng Việt gốc trong sách:</label>
+                            <p id="bestMatch" class="result-text"></p>
+                        </div>
+                        <div class="result-item">
+                            <label>Bản dịch từ Tiếng Hán sang tiếng Việt:</label>
+                            <p id="bestTranslation" class="result-text"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Results - Hidden -->
+                <div id="allResults" class="all-results hidden">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Error -->
+            <div id="error" class="error-section hidden">
+                <div class="error-card">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Lỗi</h3>
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <!-- <footer class="footer">
+            <p>&copy; 2024 Hệ thống Tìm kiếm Hán-Việt. Powered by AI.</p>
+        </footer> -->
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js', v='1.2') }}"></script>
+</body>
+</html> 
