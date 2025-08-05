@@ -152,33 +152,50 @@ class HanVietVectorStore:
         """Tìm kiếm câu tiếng Việt tương ứng"""
         print(f"Searching for: {query_han}")
         
+        # Kiểm tra xem có embeddings không
+        if self.han_embeddings_phobert is None and self.han_embeddings_labse is None:
+            print("⚠️  No embeddings available, using simple text search...")
+            return self.simple_search(query_han, top_k)
+        
         # Tiền xử lý query
         query_processed = preprocess_texts([query_han])[0]
         
-        # Encode query
-        query_embedding_phobert = phobert_encode(
-            [query_processed], self.phobert_tokenizer, self.phobert_model, self.device
-        )
-        query_embedding_labse = labse_encode([query_processed], self.labse_model)
-        
-        # Tìm kiếm semantic
-        hits_phobert = util.semantic_search(
-            query_embedding_phobert, self.han_embeddings_phobert, top_k=top_k
-        )[0]
-        
-        hits_labse = util.semantic_search(
-            query_embedding_labse, self.han_embeddings_labse, top_k=top_k
-        )[0]
-        
-        # Ensemble results
+        # Encode query và tìm kiếm
         all_hits = []
-        for hit in hits_phobert:
-            hit['model'] = 'phobert'
-            all_hits.append(hit)
-        for hit in hits_labse:
-            hit['model'] = 'labse'
-            all_hits.append(hit)
-            
+        
+        # PhoBERT search
+        if self.han_embeddings_phobert is not None and self.phobert_tokenizer is not None:
+            try:
+                query_embedding_phobert = phobert_encode(
+                    [query_processed], self.phobert_tokenizer, self.phobert_model, self.device
+                )
+                hits_phobert = util.semantic_search(
+                    query_embedding_phobert, self.han_embeddings_phobert, top_k=top_k
+                )[0]
+                for hit in hits_phobert:
+                    hit['model'] = 'phobert'
+                    all_hits.append(hit)
+            except Exception as e:
+                print(f"PhoBERT search failed: {str(e)}")
+        
+        # LaBSE search
+        if self.han_embeddings_labse is not None and self.labse_model is not None:
+            try:
+                query_embedding_labse = labse_encode([query_processed], self.labse_model)
+                hits_labse = util.semantic_search(
+                    query_embedding_labse, self.han_embeddings_labse, top_k=top_k
+                )[0]
+                for hit in hits_labse:
+                    hit['model'] = 'labse'
+                    all_hits.append(hit)
+            except Exception as e:
+                print(f"LaBSE search failed: {str(e)}")
+        
+        # Nếu không có kết quả từ embeddings, dùng simple search
+        if not all_hits:
+            print("⚠️  No semantic search results, using simple text search...")
+            return self.simple_search(query_han, top_k)
+        
         # Sort by score
         all_hits = sorted(all_hits, key=lambda x: -x['score'])[:top_k]
         
@@ -195,6 +212,37 @@ class HanVietVectorStore:
             })
             
         return results
+    
+    def simple_search(self, query_han, top_k=1):
+        """Tìm kiếm đơn giản bằng text matching"""
+        print(f"Simple search for: {query_han}")
+        
+        results = []
+        query_lower = query_han.lower()
+        
+        # Tìm kiếm trong DataFrame
+        for idx, row in self.df.iterrows():
+            han_text = str(row['Câu tiếng Hán']).lower()
+            
+            # Tính điểm đơn giản dựa trên độ tương đồng
+            if query_lower in han_text or han_text in query_lower:
+                score = 0.8  # Điểm cao cho exact match
+            elif any(char in han_text for char in query_lower):
+                score = 0.3  # Điểm thấp cho partial match
+            else:
+                continue
+            
+            results.append({
+                'han_original': row['Câu tiếng Hán'],
+                'translation': row['translation'],
+                'best_match': row['best_match'],
+                'score': score,
+                'model': 'simple'
+            })
+        
+        # Sort và trả về top_k kết quả
+        results = sorted(results, key=lambda x: -x['score'])[:top_k]
+        return results
 
 # ========== Main Functions ==========
 def create_vectorstore(data_path):
@@ -208,14 +256,14 @@ def create_vectorstore(data_path):
 
 def load_and_search(query_han, vectorstore_path="han_viet_vectorstore.pkl"):
     """Load vectorstore và tìm kiếm"""
-    # Kiểm tra xem file có tồn tại không, nếu không thì download
+    # Kiểm tra xem file có tồn tại không, nếu không thì tạo model
     if not os.path.exists(vectorstore_path):
-        print(f"Vectorstore file {vectorstore_path} not found. Attempting to download...")
+        print(f"Vectorstore file {vectorstore_path} not found. Creating model...")
         try:
             import download_model
-            download_model.download_from_google_drive()
+            download_model.create_model_from_csv()
         except Exception as e:
-            print(f"Failed to download model: {str(e)}")
+            print(f"Failed to create model: {str(e)}")
             # Tạo dummy model để tránh crash
             download_model.create_dummy_model()
     

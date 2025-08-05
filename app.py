@@ -86,24 +86,37 @@ def init_model():
     try:
         model_path = "han_viet_vectorstore.pkl"
         if not os.path.exists(model_path):
-            print("Model file not found, attempting to download...")
+            print("Model file not found, creating model from CSV...")
             try:
                 import download_model
-                success = download_model.download_from_google_drive()
+                success = download_model.create_model_from_csv()
                 if success:
-                    return jsonify({'status': 'success', 'message': 'Model downloaded successfully'})
+                    return jsonify({'status': 'success', 'message': 'Model created successfully from CSV'})
                 else:
                     # Tạo dummy model
                     download_model.create_dummy_model()
                     return jsonify({'status': 'warning', 'message': 'Using dummy model'})
             except Exception as e:
-                print(f"Error downloading model: {str(e)}")
+                print(f"Error creating model: {str(e)}")
                 # Tạo dummy model
                 import download_model
                 download_model.create_dummy_model()
                 return jsonify({'status': 'warning', 'message': f'Using dummy model due to error: {str(e)}'})
         else:
-            return jsonify({'status': 'success', 'message': 'Model already exists'})
+            # Kiểm tra xem file có hợp lệ không
+            try:
+                import download_model
+                if download_model.validate_pickle_file(model_path):
+                    return jsonify({'status': 'success', 'message': 'Valid model already exists'})
+                else:
+                    print("Invalid model file, recreating...")
+                    os.remove(model_path)
+                    import download_model
+                    download_model.create_model_from_csv()
+                    return jsonify({'status': 'success', 'message': 'Model recreated successfully'})
+            except Exception as e:
+                print(f"Error validating model: {str(e)}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 

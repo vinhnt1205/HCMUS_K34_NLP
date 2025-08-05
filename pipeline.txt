@@ -3,3 +3,10 @@ câu tiếng hán -> process -> câu tiếng việt trong sách
     + câu tiếng hán -> dịch sang tiếng việt -> embedding -> (1)
     + câu tiếng việt gốc trong sách -> embedding -> (2)
     + đối chiếu: lấy (1) so khớp với (2) -> chọn ngưỡng -> ra được câu dịch tiếng việt
+
+
+
+
+Dựa vào quyển sách mà anh Giang có bổ sung cho nhóm em có mã "MTPGB001", "MTPGB002" từ link "https://docs.google.com/spreadsheets/d/1HiF8VncOautSudR7_CBA-uGc5uKpARxSuinfAu0NkNw/edit?gid=0#gid=0"
+Thì nhóm em đã tạo ra 1 ứng dụng dùng để dịch câu tiếng hán sang tiếng việt cho quyển sách này
+Người dùng sẽ nhập câu tiếng Hán và kết quả sẽ trả về câu dịch tiếng việt tương ứng từ trong quyển sách này
