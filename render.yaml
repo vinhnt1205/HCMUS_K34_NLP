@@ -2,7 +2,7 @@ services:
   - type: web
     name: han-viet-search-api
     env: python
-    plan: starter
+    plan: standard
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
     envVars:
@@ -10,5 +10,7 @@ services:
         value: 3.11
       - key: PORT
         value: 5008
+      - key: PYTORCH_CUDA_ALLOC_CONF
+        value: max_split_size_mb:128
     healthCheckPath: /api/health
     autoDeploy: true 
