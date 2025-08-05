@@ -256,14 +256,15 @@ def create_vectorstore(data_path):
 
 def load_and_search(query_han, vectorstore_path="han_viet_vectorstore.pkl"):
     """Load vectorstore và tìm kiếm"""
-    # Kiểm tra xem file có tồn tại không, nếu không thì tạo model
+    # Kiểm tra xem file có tồn tại không
     if not os.path.exists(vectorstore_path):
-        print(f"Vectorstore file {vectorstore_path} not found. Creating model...")
+        print(f"Vectorstore file {vectorstore_path} not found. Downloading...")
         try:
             import download_model
-            download_model.create_model_from_csv()
+            # Thử download từ Hugging Face Hub
+            download_model.download_from_huggingface()
         except Exception as e:
-            print(f"Failed to create model: {str(e)}")
+            print(f"Failed to download model: {str(e)}")
             # Tạo dummy model để tránh crash
             download_model.create_dummy_model()
     
