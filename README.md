@@ -4,61 +4,70 @@
 
 ## Tính năng
 
-- Dịch câu tiếng Hán sang tiếng Việt
-- Tìm kiếm thông minh sử dụng AI
-- Giao diện web thân thiện
-- API RESTful
+* Dịch câu tiếng Hán sang tiếng Việt
+* Tìm kiếm thông minh sử dụng AI
+* Giao diện web thân thiện
+* API RESTful
 
 ## Công nghệ sử dụng
 
-- **Backend**: Flask, Python
-- **AI Models**: PhoBERT, LaBSE
-- **Frontend**: HTML, CSS, JavaScript
-- **Vector Search**: Sentence Transformers
+* **Backend**: Flask, Python
+* **AI Models**: PhoBERT, LaBSE
+* **Frontend**: HTML, CSS, JavaScript
+* **Vector Search**: Sentence Transformers
 
 ## Deploy lên Render
 
-### Bước 1: Chuẩn bị
-1. Đảm bảo code đã được push lên GitHub
-2. Có tài khoản Render (đăng ký tại https://render.com)
+### Bước 1: Chuẩn bị Repository
 
-### Bước 2: Upload Model File
-Trước khi deploy, bạn cần upload file `han_viet_vectorstore.pkl` lên nơi lưu trữ:
+Repository đã được chuẩn bị sẵn với:
+- ✅ File `.gitignore` loại trừ file `.pkl` (quá nặng)
+- ✅ Script `download_model.py` tự động tải model từ Hugging Face Hub
+- ✅ Script `build.sh` cấu hình cho Render
+- ✅ File `requirements.txt` với tất cả dependencies
 
-**Cách 1: Google Drive**
-1. Upload file `han_viet_vectorstore.pkl` lên Google Drive
-2. Share với "Anyone with the link"
-3. Copy URL và thay thế `/view?usp=sharing` bằng `/uc?export=download`
-4. Cập nhật URL trong file `download_model.py`
+### Bước 2: Deploy trên Render
 
-**Cách 2: File hosting service**
-1. Upload lên https://file.io/ hoặc https://transfer.sh/
-2. Copy direct download URL
-3. Cập nhật URL trong file `download_model.py`
+1. **Đăng nhập Render**: Truy cập [render.com](https://render.com) và đăng nhập
 
-### Bước 3: Deploy trên Render
-1. Đăng nhập vào Render Dashboard
-2. Click "New +" → "Web Service"
-3. Connect với GitHub repository
-4. Cấu hình:
-   - **Name**: han-viet-translator (hoặc tên bạn muốn)
-   - **Environment**: Python 3
+2. **Tạo Web Service**:
+   - Click "New +" → "Web Service"
+   - Connect với GitHub repository: `https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP`
+
+3. **Cấu hình Service**:
+   - **Name**: `han-viet-translator` (hoặc tên bạn muốn)
+   - **Environment**: `Python 3`
    - **Build Command**: `chmod +x build.sh && ./build.sh`
    - **Start Command**: `gunicorn app:app`
    - **Plan**: Free
 
-### Bước 3: Environment Variables (nếu cần)
-Thêm các biến môi trường nếu cần:
-- `PORT`: 10000 (Render sẽ tự động set)
+4. **Environment Variables** (nếu cần):
+   - `PORT`: Render sẽ tự động set
 
-### Bước 4: Deploy
-Click "Create Web Service" và chờ deploy hoàn tất.
+5. **Deploy**: Click "Create Web Service"
+
+### Bước 3: Quá trình Deploy
+
+Render sẽ:
+1. Clone repository từ GitHub
+2. Chạy `build.sh` để:
+   - Cài đặt dependencies từ `requirements.txt`
+   - Tải model từ Hugging Face Hub
+3. Khởi động app với Gunicorn
+
+### Bước 4: Truy cập App
+
+Sau khi deploy thành công, bạn sẽ nhận được URL như:
+`https://han-viet-translator.onrender.com`
 
 ## Chạy locally
 
 ```bash
 # Cài đặt dependencies
 pip install -r requirements.txt
+
+# Tải model (tự động chạy khi start app)
+python download_model.py
 
 # Chạy ứng dụng
 python app.py
@@ -68,25 +77,45 @@ Truy cập: http://localhost:5008
 
 ## API Endpoints
 
-- `GET /`: Trang chủ
-- `POST /api/search`: Tìm kiếm/dịch câu Hán-Việt
-- `GET /api/health`: Health check
+* `GET /`: Trang chủ
+* `POST /api/search`: Tìm kiếm/dịch câu Hán-Việt
+* `GET /api/health`: Health check
+* `GET /api/init-model`: Khởi tạo model
 
 ## Cấu trúc project
 
 ```
 ├── app.py                 # Flask app chính
 ├── han_viet_search_system.py  # Logic AI
-├── requirements.txt       # Python dependencies
-├── Procfile              # Render configuration
-├── runtime.txt           # Python version
-├── templates/            # HTML templates
-├── static/              # CSS, JS files
-└── han_viet_vectorstore.pkl  # AI model data
+├── download_model.py      # Script tải model
+├── build.sh              # Script build cho Render
+├── requirements.txt      # Python dependencies
+├── Procfile             # Render configuration
+├── runtime.txt          # Python version
+├── templates/           # HTML templates
+├── static/             # CSS, JS files
+└── .gitignore          # Loại trừ file .pkl
 ```
 
-## Lưu ý
+## Lưu ý quan trọng
 
-- App sẽ sleep sau 15 phút không hoạt động (free tier)
-- Lần đầu truy cập có thể chậm do cần load AI models
-- File `han_viet_vectorstore.pkl` cần được upload lên Render 
+* ✅ File `han_viet_vectorstore.pkl` được tải tự động từ Hugging Face Hub
+* ✅ App sẽ sleep sau 15 phút không hoạt động (free tier)
+* ✅ Lần đầu truy cập có thể chậm do cần load AI models
+* ✅ Model được validate trước khi sử dụng
+
+## Troubleshooting
+
+### Nếu deploy thất bại:
+1. Kiểm tra logs trong Render Dashboard
+2. Đảm bảo repository có đầy đủ file cần thiết
+3. Kiểm tra `requirements.txt` có đúng dependencies
+
+### Nếu model không tải được:
+1. Kiểm tra kết nối internet
+2. Script sẽ tạo dummy model để test
+3. Kiểm tra URL Hugging Face Hub trong `download_model.py`
+
+## Liên hệ
+
+Repository: [https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP](https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP) 
