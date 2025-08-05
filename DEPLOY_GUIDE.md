@@ -25,9 +25,14 @@ Repository đã được chuẩn bị đầy đủ:
 Name: han-viet-translator
 Environment: Python 3
 Build Command: chmod +x build.sh && ./build.sh
-Start Command: gunicorn app:app
+Start Command: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1
 Plan: Free
 ```
+
+**Hoặc sử dụng render.yaml (recommended):**
+1. File `render.yaml` đã được tạo sẵn
+2. Render sẽ tự động detect và sử dụng cấu hình này
+3. Không cần cấu hình thủ công
 
 ### Bước 4: Environment Variables
 Không cần thêm biến môi trường nào, Render sẽ tự động set `PORT`.
