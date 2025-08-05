@@ -1,132 +1,141 @@
-# Hệ thống Dịch Hán-Việt
+# Hệ thống Tìm kiếm Hán-Việt
 
-Ứng dụng web sử dụng AI để dịch và tìm kiếm câu từ tiếng Hán sang tiếng Việt.
+Ứng dụng Flask API để tìm kiếm và dịch thuật văn bản Hán-Việt sử dụng các mô hình AI.
 
 ## Tính năng
 
-* Dịch câu tiếng Hán sang tiếng Việt
-* Tìm kiếm thông minh sử dụng AI
-* Giao diện web thân thiện
-* API RESTful
+- Tìm kiếm semantic cho văn bản Hán
+- Dịch thuật Hán-Việt
+- API RESTful
+- Giao diện web
+- Tối ưu hóa hiệu suất với vectorstore caching
 
-## Công nghệ sử dụng
+## Cài đặt và Chạy với Docker
 
-* **Backend**: Flask, Python
-* **AI Models**: PhoBERT, LaBSE
-* **Frontend**: HTML, CSS, JavaScript
-* **Vector Search**: Sentence Transformers
+### 1. Build Docker Image
 
-## Deploy lên Render
-
-### Bước 1: Chuẩn bị Repository
-
-Repository đã được chuẩn bị sẵn với:
-- ✅ File `.gitignore` loại trừ file `.pkl` (quá nặng)
-- ✅ Script `download_model.py` tự động tải model từ Hugging Face Hub
-- ✅ Script `build.sh` cấu hình cho Render
-- ✅ File `requirements.txt` với tất cả dependencies
-
-### Bước 2: Deploy trên Render
-
-1. **Đăng nhập Render**: Truy cập [render.com](https://render.com) và đăng nhập
-
-2. **Tạo Web Service**:
-   - Click "New +" → "Web Service"
-   - Connect với GitHub repository: `https://github.com/vinhnt1205/K34_HCMUS_NLP`
-
-3. **Cấu hình Service**:
-   - **Name**: `han-viet-translator` (hoặc tên bạn muốn)
-   - **Environment**: `Python 3`
-   - **Build Command**: `chmod +x build.sh && ./build.sh`
-   - **Start Command**: `gunicorn app:app`
-   - **Plan**: Free
-
-4. **Environment Variables** (nếu cần):
-   - `PORT`: Render sẽ tự động set
-
-5. **Deploy**: Click "Create Web Service"
-
-### Bước 3: Quá trình Deploy
-
-Render sẽ:
-1. Clone repository từ GitHub
-2. Chạy `build.sh` để:
-   - Cài đặt dependencies từ `requirements.txt`
-   - Tải model từ Hugging Face Hub
-3. Khởi động app với Gunicorn
-
-### Bước 4: Truy cập App
-
-Sau khi deploy thành công, bạn sẽ nhận được URL như:
-`https://han-viet-translator.onrender.com`
-
-## Chạy locally
-
-### Cách 1: Sử dụng Docker (Recommended)
 ```bash
-# Build và run với Docker
-./docker-build.sh
+docker build -t han-viet-search .
+```
 
-# Hoặc thủ công
-docker build -t han-viet-translator .
+### 2. Chạy với Docker Compose (Khuyến nghị)
+
+```bash
 docker-compose up -d
 ```
 
-### Cách 2: Chạy trực tiếp
+### 3. Chạy với Docker trực tiếp
+
 ```bash
-# Cài đặt dependencies
-pip install -r requirements.txt
-
-# Tải model (tự động chạy khi start app)
-python download_model.py
-
-# Chạy ứng dụng
-python app.py
+docker run -d \
+  --name han-viet-search-app \
+  -p 5008:5008 \
+  -v $(pwd)/models:/app/models \
+  han-viet-search
 ```
 
-Truy cập: http://localhost:5008
+## Sử dụng
 
-## API Endpoints
-
-* `GET /`: Trang chủ
-* `POST /api/search`: Tìm kiếm/dịch câu Hán-Việt
-* `GET /api/health`: Health check
-* `GET /api/init-model`: Khởi tạo model
-
-## Cấu trúc project
-
+### Truy cập Web Interface
 ```
-├── app.py                 # Flask app chính
-├── han_viet_search_system.py  # Logic AI
-├── download_model.py      # Script tải model
-├── build.sh              # Script build cho Render
-├── requirements.txt      # Python dependencies
-├── Procfile             # Render configuration
-├── runtime.txt          # Python version
-├── templates/           # HTML templates
-├── static/             # CSS, JS files
-└── .gitignore          # Loại trừ file .pkl
+http://localhost:5008
 ```
 
-## Lưu ý quan trọng
+### API Endpoints
 
-* ✅ File `han_viet_vectorstore.pkl` được tải tự động từ Hugging Face Hub
-* ✅ App sẽ sleep sau 15 phút không hoạt động (free tier)
-* ✅ Lần đầu truy cập có thể chậm do cần load AI models
-* ✅ Model được validate trước khi sử dụng
+#### Health Check
+```bash
+curl http://localhost:5008/api/health
+```
+
+#### Tìm kiếm
+```bash
+curl -X POST http://localhost:5008/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "鎮驚安神"}'
+```
+
+#### Khởi tạo Model
+```bash
+curl http://localhost:5008/api/init-model
+```
+
+## Cấu trúc Project
+
+```
+.
+├── app.py                          # Flask application
+├── han_viet_search_system.py       # Core search system
+├── download_model.py               # Model download utilities
+├── requirements.txt                # Python dependencies
+├── Dockerfile                      # Docker configuration
+├── docker-compose.yml             # Docker Compose configuration
+├── .dockerignore                   # Docker ignore rules
+├── templates/                      # HTML templates
+├── static/                         # Static files (CSS, JS)
+└── models/                         # Model files (mounted volume)
+```
+
+## Environment Variables
+
+- `PYTHONPATH`: Path to Python modules
+- `FLASK_APP`: Flask application file
+- `FLASK_ENV`: Environment (production/development)
+- `PORT`: Port number (default: 5008)
+
+## Monitoring
+
+### Health Check
+Container có health check tự động kiểm tra trạng thái API mỗi 30 giây.
+
+### Logs
+```bash
+# Xem logs
+docker-compose logs -f
+
+# Hoặc với Docker trực tiếp
+docker logs -f han-viet-search-app
+```
 
 ## Troubleshooting
 
-### Nếu deploy thất bại:
-1. Kiểm tra logs trong Render Dashboard
-2. Đảm bảo repository có đầy đủ file cần thiết
-3. Kiểm tra `requirements.txt` có đúng dependencies
+### 1. Model không load được
+```bash
+# Kiểm tra API init-model
+curl http://localhost:5008/api/init-model
+```
 
-### Nếu model không tải được:
-1. Kiểm tra kết nối internet
-2. Script sẽ tạo dummy model để test
-3. Kiểm tra URL Hugging Face Hub trong `download_model.py`
+### 2. Container không start
+```bash
+# Kiểm tra logs
+docker logs han-viet-search-app
+```
 
-## Liên hệ
+### 3. Memory issues
+Tăng memory limit trong docker-compose.yml:
+```yaml
+deploy:
+  resources:
+    limits:
+      memory: 8G
+```
 
-Repository: [https://github.com/vinhnt1205/K34_HCMUS_NLP](https://github.com/vinhnt1205/K34_HCMUS_NLP) 
+## Performance
+
+- Vectorstore được load một lần khi khởi động
+- Caching để tăng tốc độ phản hồi
+- Memory optimization cho production
+
+## Development
+
+### Local Development
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+### Rebuild Docker Image
+```bash
+docker-compose build --no-cache
+docker-compose up -d
+``` 

@@ -12,34 +12,54 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import sau khi đã setup path
-from han_viet_search_system import load_and_search
+from han_viet_search_system import HanVietVectorStore
 
 app = Flask(__name__)
 CORS(app)
 
-# Khởi tạo model khi app start
-print("=== Initializing Han-Viet Search System ===")
-try:
-    model_path = "han_viet_vectorstore.pkl"
-    if not os.path.exists(model_path):
-        print("Model file not found, downloading from Hugging Face Hub...")
-        import download_model
-        success = download_model.download_from_huggingface()
-        if not success:
-            print("Download failed, creating dummy model...")
-            download_model.create_dummy_model()
-    else:
-        print("Model file exists, validating...")
-        import download_model
-        if not download_model.validate_pickle_file(model_path):
-            print("Invalid model file, downloading again...")
-            os.remove(model_path)
-            download_model.download_from_huggingface()
+# Biến global để lưu trữ vectorstore instance
+vectorstore_instance = None
+
+def initialize_vectorstore():
+    """Khởi tạo vectorstore một lần duy nhất"""
+    global vectorstore_instance
     
-    print("✅ Model initialization completed!")
-except Exception as e:
-    print(f"❌ Error during model initialization: {str(e)}")
-    print("Will try to download model on first request...")
+    if vectorstore_instance is not None:
+        return vectorstore_instance
+    
+    print("=== Initializing Han-Viet Search System ===")
+    try:
+        model_path = "han_viet_vectorstore.pkl"
+        if not os.path.exists(model_path):
+            print("Model file not found, downloading from Hugging Face Hub...")
+            import download_model
+            success = download_model.download_from_huggingface()
+            if not success:
+                print("Download failed, creating dummy model...")
+                download_model.create_dummy_model()
+        else:
+            print("Model file exists, validating...")
+            import download_model
+            if not download_model.validate_pickle_file(model_path):
+                print("Invalid model file, downloading again...")
+                os.remove(model_path)
+                download_model.download_from_huggingface()
+        
+        # Load vectorstore một lần duy nhất
+        print("Loading vectorstore...")
+        vectorstore_instance = HanVietVectorStore(None)
+        vectorstore_instance.load_vectorstore(model_path)
+        print("✅ Vectorstore loaded successfully!")
+        
+        return vectorstore_instance
+        
+    except Exception as e:
+        print(f"❌ Error during vectorstore initialization: {str(e)}")
+        print("Will try to download model on first request...")
+        return None
+
+# Khởi tạo vectorstore khi app start
+vectorstore_instance = initialize_vectorstore()
 
 @app.route('/')
 def index():
@@ -49,6 +69,8 @@ def index():
 @app.route('/api/search', methods=['POST'])
 def search():
     """API endpoint để tìm kiếm"""
+    global vectorstore_instance
+    
     try:
         data = request.get_json()
         if not data:
@@ -65,8 +87,18 @@ def search():
                 'error': 'Vui lòng nhập câu tiếng Hán'
             }), 400
         
-        # Tìm kiếm
-        results = load_and_search(query_han)
+        # Kiểm tra xem vectorstore đã được load chưa
+        if vectorstore_instance is None:
+            print("Vectorstore not initialized, trying to initialize...")
+            vectorstore_instance = initialize_vectorstore()
+            if vectorstore_instance is None:
+                return jsonify({
+                    'success': False,
+                    'error': 'Hệ thống chưa sẵn sàng, vui lòng thử lại sau'
+                }), 503
+        
+        # Tìm kiếm sử dụng instance đã load sẵn
+        results = vectorstore_instance.search(query_han)
         
         if not results:
             return jsonify({
@@ -102,57 +134,31 @@ def search():
 @app.route('/api/health')
 def health():
     """Health check"""
-    return jsonify({'status': 'healthy'})
+    global vectorstore_instance
+    status = 'healthy' if vectorstore_instance is not None else 'initializing'
+    return jsonify({
+        'status': status,
+        'vectorstore_loaded': vectorstore_instance is not None
+    })
 
 @app.route('/api/init-model')
 def init_model():
     """Khởi tạo model nếu chưa có"""
+    global vectorstore_instance
+    
     try:
-        model_path = "han_viet_vectorstore.pkl"
-        if not os.path.exists(model_path):
-            print("Model file not found, downloading from Hugging Face Hub...")
-            try:
-                import download_model
-                success = download_model.download_from_huggingface()
-                if success:
-                    return jsonify({'status': 'success', 'message': 'Model downloaded successfully from Hugging Face Hub'})
-                else:
-                    # Tạo dummy model
-                    download_model.create_dummy_model()
-                    return jsonify({'status': 'warning', 'message': 'Using dummy model'})
-            except Exception as e:
-                print(f"Error downloading model: {str(e)}")
-                # Tạo dummy model
-                import download_model
-                download_model.create_dummy_model()
-                return jsonify({'status': 'warning', 'message': f'Using dummy model due to error: {str(e)}'})
+        if vectorstore_instance is not None:
+            return jsonify({'status': 'success', 'message': 'Vectorstore already loaded'})
+        
+        vectorstore_instance = initialize_vectorstore()
+        if vectorstore_instance is not None:
+            return jsonify({'status': 'success', 'message': 'Vectorstore loaded successfully'})
         else:
-            # Kiểm tra xem file có hợp lệ không
-            try:
-                import download_model
-                if download_model.validate_pickle_file(model_path):
-                    return jsonify({'status': 'success', 'message': 'Valid model already exists'})
-                else:
-                    print("Invalid model file, downloading again...")
-                    os.remove(model_path)
-                    import download_model
-                    download_model.download_from_huggingface()
-                    return jsonify({'status': 'success', 'message': 'Model downloaded successfully'})
-            except Exception as e:
-                print(f"Error validating model: {str(e)}")
-                # Tạo dummy model thay vì trả về lỗi
-                import download_model
-                download_model.create_dummy_model()
-                return jsonify({'status': 'warning', 'message': f'Using dummy model due to validation error: {str(e)}'})
+            return jsonify({'status': 'error', 'message': 'Failed to load vectorstore'}), 500
+            
     except Exception as e:
         print(f"Unexpected error in init_model: {str(e)}")
-        # Luôn trả về success với dummy model thay vì lỗi
-        try:
-            import download_model
-            download_model.create_dummy_model()
-            return jsonify({'status': 'warning', 'message': f'Using dummy model due to unexpected error: {str(e)}'})
-        except:
-            return jsonify({'status': 'error', 'message': 'Failed to initialize model'}), 500
+        return jsonify({'status': 'error', 'message': f'Failed to initialize model: {str(e)}'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5008))
