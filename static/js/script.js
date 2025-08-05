@@ -100,6 +100,13 @@ async function handleSearch(e) {
     hideError();
     
     try {
+        // Đầu tiên, khởi tạo model nếu cần
+        console.log('Initializing model...');
+        const initResponse = await fetch('/api/init-model');
+        const initData = await initResponse.json();
+        console.log('Model init response:', initData);
+        
+        // Sau đó thực hiện search
         const response = await fetch('/api/search', {
             method: 'POST',
             headers: {

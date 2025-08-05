@@ -5,7 +5,6 @@ Script để download model file han_viet_vectorstore.pkl
 
 import os
 import requests
-import gdown
 from pathlib import Path
 
 def download_from_google_drive():
@@ -21,28 +20,16 @@ def download_from_google_drive():
         print(f"Downloading {output_file} from Google Drive...")
         print(f"URL: {gdrive_url}")
         
-        # Thử download với gdown
-        result = gdown.download(gdrive_url, output_file, quiet=False)
-        
-        if result and os.path.exists(output_file):
-            file_size = os.path.getsize(output_file) / (1024 * 1024)  # MB
-            print(f"✅ Downloaded successfully! File size: {file_size:.2f} MB")
-            return True
-        else:
-            print("❌ Download failed with gdown, trying direct download...")
-            # Thử download trực tiếp
-            return download_direct_from_gdrive(gdrive_url, output_file)
+        # Download trực tiếp từ Google Drive
+        return download_direct_from_gdrive(gdrive_url, output_file)
             
     except Exception as e:
-        print(f"❌ Error downloading with gdown: {str(e)}")
-        print("Trying direct download...")
-        return download_direct_from_gdrive(gdrive_url, output_file)
+        print(f"❌ Error downloading: {str(e)}")
+        return False
 
 def download_direct_from_gdrive(gdrive_url, output_file):
     """Download trực tiếp từ Google Drive"""
     try:
-        import requests
-        
         # Tạo session để handle redirects
         session = requests.Session()
         response = session.get(gdrive_url, stream=True)
