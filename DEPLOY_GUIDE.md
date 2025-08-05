@@ -17,7 +17,7 @@ Repository đã được chuẩn bị đầy đủ:
 
 ### Bước 2: Tạo Web Service
 1. Click "New +" → "Web Service"
-2. Connect với GitHub repository: `https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP`
+2. Connect với GitHub repository: `https://github.com/vinhnt1205/K34_HCMUS_NLP`
 3. Chọn branch `main`
 
 ### Bước 3: Cấu hình Service
@@ -96,7 +96,7 @@ curl -X POST https://your-app-name.onrender.com/api/search \
 
 Nếu gặp vấn đề, kiểm tra:
 1. Render Dashboard logs
-2. GitHub repository: https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP
+2. GitHub repository: https://github.com/vinhnt1205/K34_HCMUS_NLP
 3. Hugging Face dataset: https://huggingface.co/datasets/ntvinh12052001/han_viet_vectorstore
 
 ## 🎉 Thành công!

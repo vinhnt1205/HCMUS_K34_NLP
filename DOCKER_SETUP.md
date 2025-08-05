@@ -24,8 +24,8 @@ docker-compose --version
 
 ### Bước 1: Clone Repository
 ```bash
-git clone https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP.git
-cd HCMUS_KHDL_K34_NLP
+git clone https://github.com/vinhnt1205/K34_HCMUS_NLP.git
+cd K34_HCMUS_NLP
 ```
 
 ### Bước 2: Build và Run

@@ -32,7 +32,7 @@ Repository đã được chuẩn bị sẵn với:
 
 2. **Tạo Web Service**:
    - Click "New +" → "Web Service"
-   - Connect với GitHub repository: `https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP`
+   - Connect với GitHub repository: `https://github.com/vinhnt1205/K34_HCMUS_NLP`
 
 3. **Cấu hình Service**:
    - **Name**: `han-viet-translator` (hoặc tên bạn muốn)
@@ -129,4 +129,4 @@ Truy cập: http://localhost:5008
 
 ## Liên hệ
 
-Repository: [https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP](https://github.com/vinhnt1205/HCMUS_KHDL_K34_NLP) 
+Repository: [https://github.com/vinhnt1205/K34_HCMUS_NLP](https://github.com/vinhnt1205/K34_HCMUS_NLP) 
