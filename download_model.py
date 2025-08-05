@@ -50,76 +50,64 @@ def validate_pickle_file(file_path):
         print(f"❌ Error validating pickle file: {str(e)}")
         return False
 
-def download_from_huggingface():
-    """Download file từ Hugging Face Hub"""
-    # URL Hugging Face Hub - sử dụng link download trực tiếp
+def load_pickle_from_url():
+    """Load pickle file trực tiếp từ URL mà không cần download"""
+    import pickle
+    import io
+    
+    # URL Hugging Face Hub
     hf_url = "https://huggingface.co/datasets/ntvinh12052001/han_viet_vectorstore/resolve/main/han_viet_vectorstore.pkl"
-    output_file = "han_viet_vectorstore.pkl"
     
     try:
-        print(f"Downloading {output_file} from Hugging Face Hub...")
+        print(f"Loading pickle file directly from URL...")
         print(f"URL: {hf_url}")
         
         # Tạo session với timeout
         session = requests.Session()
         session.timeout = 300  # 5 phút timeout
         
-        # Thử download với timeout
+        # Load trực tiếp từ URL
         response = session.get(hf_url, stream=True, timeout=300)
         response.raise_for_status()
         
         # Kiểm tra content type
         content_type = response.headers.get('content-type', '')
         if 'text/html' in content_type:
-            print("❌ Downloaded file is HTML, not a pickle file!")
-            return False
+            print("❌ URL returns HTML, not a pickle file!")
+            return None
         
-        with open(output_file, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
+        # Load pickle trực tiếp từ response content
+        print("Loading pickle data from memory...")
+        pickle_data = response.content
         
-        if os.path.exists(output_file):
-            file_size = os.path.getsize(output_file) / (1024 * 1024)  # MB
-            print(f"✅ Downloaded successfully! File size: {file_size:.2f} MB")
-            
-            # Validate file ngay sau khi download
-            if validate_pickle_file(output_file):
-                return True
-            else:
-                print("❌ Downloaded file is invalid!")
-                os.remove(output_file)
-                return False
-        else:
-            print("❌ Download failed!")
-            return False
-            
+        # Load pickle object
+        data = pickle.loads(pickle_data)
+        print("✅ Successfully loaded pickle data from URL!")
+        
+        return data
+        
     except requests.exceptions.Timeout:
-        print("❌ Download timeout after 5 minutes")
-        return False
+        print("❌ Request timeout after 5 minutes")
+        return None
     except requests.exceptions.ConnectionError:
-        print("❌ Connection error during download")
-        return False
+        print("❌ Connection error")
+        return None
     except Exception as e:
-        print(f"❌ Error downloading: {str(e)}")
-        return False
+        print(f"❌ Error loading from URL: {str(e)}")
+        return None
 
 if __name__ == "__main__":
-    print("=== Model Download Script ===")
+    print("=== Online Pickle Load Script ===")
     
-    # Kiểm tra xem file đã tồn tại chưa và có hợp lệ không
-    if os.path.exists("han_viet_vectorstore.pkl"):
-        if validate_pickle_file("han_viet_vectorstore.pkl"):
-            print("✅ Valid model file already exists!")
-            exit(0)
-        else:
-            print("⚠️  Existing file is invalid, will try to download again...")
-            os.remove("han_viet_vectorstore.pkl")
+    # Load pickle trực tiếp từ URL
+    data = load_pickle_from_url()
     
-    # Download từ Hugging Face Hub
-    if download_from_huggingface():
-        print("✅ Model downloaded successfully!")
+    if data is not None:
+        print("✅ Successfully loaded pickle data from Hugging Face!")
+        print(f"Data type: {type(data)}")
+        if isinstance(data, dict):
+            print(f"Keys: {list(data.keys())}")
         exit(0)
     else:
-        print("❌ Failed to download model from Hugging Face Hub!")
+        print("❌ Failed to load pickle data from Hugging Face!")
         exit(1) 

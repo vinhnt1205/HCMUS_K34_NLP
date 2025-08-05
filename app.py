@@ -31,22 +31,22 @@ def initialize_vectorstore():
     try:
         model_path = "han_viet_vectorstore.pkl"
         if not os.path.exists(model_path):
-            print("Model file not found, downloading from Hugging Face Hub...")
+            print("Model file not found, loading from Hugging Face Hub...")
             import download_model
-            success = download_model.download_from_huggingface()
-            if not success:
-                print("❌ Download failed! Model file is required.")
+            data = download_model.load_pickle_from_url()
+            if data is None:
+                print("❌ Load failed! Model file is required.")
                 return None
         else:
             print("Model file exists, validating...")
             import download_model
             if not download_model.validate_pickle_file(model_path):
-                print("Invalid model file, downloading again...")
-                os.remove(model_path)
-                success = download_model.download_from_huggingface()
-                if not success:
-                    print("❌ Download failed! Model file is required.")
-                    return None
+                            print("Invalid model file, loading from URL...")
+            os.remove(model_path)
+            data = download_model.load_pickle_from_url()
+            if data is None:
+                print("❌ Load failed! Model file is required.")
+                return None
         
         # Load vectorstore một lần duy nhất với memory optimization
         print("Loading vectorstore with memory optimization...")
@@ -54,7 +54,8 @@ def initialize_vectorstore():
         gc.collect()  # Clean up memory before loading
         
         vectorstore_instance = HanVietVectorStore(None)
-        vectorstore_instance.load_vectorstore(model_path)
+        # Load trực tiếp từ Hugging Face URL
+        vectorstore_instance.load_vectorstore("https://huggingface.co/datasets/ntvinh12052001/han_viet_vectorstore/resolve/main/han_viet_vectorstore.pkl")
         
         # Clean up memory after loading
         gc.collect()

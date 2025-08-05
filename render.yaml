@@ -3,7 +3,9 @@ services:
     name: han-viet-search-api
     env: python
     plan: starter
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install -r requirements.txt
+      python -c "import torch; print('PyTorch version:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
     startCommand: python app.py
     envVars:
       - key: PYTHON_VERSION

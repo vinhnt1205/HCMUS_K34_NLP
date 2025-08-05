@@ -134,11 +134,23 @@ class HanVietVectorStore:
         print("Vectorstore saved successfully!")
         
     def load_vectorstore(self, load_path="han_viet_vectorstore.pkl"):
-        """Load vectorstore - chỉ dùng file .pkl, lỗi là dừng, không tạo gì khác"""
+        """Load vectorstore từ file .pkl hoặc URL"""
         print(f"Loading vectorstore from {load_path}...")
         try:
-            with open(load_path, 'rb') as f:
-                vectorstore_data = pickle.load(f)
+            # Thử load từ URL trước
+            if load_path.startswith("http") or "huggingface" in load_path:
+                print("Loading from Hugging Face URL...")
+                import download_model
+                vectorstore_data = download_model.load_pickle_from_url()
+                if vectorstore_data is None:
+                    print("Failed to load from URL, trying local file...")
+                    with open(load_path, 'rb') as f:
+                        vectorstore_data = pickle.load(f)
+            else:
+                # Load từ local file
+                with open(load_path, 'rb') as f:
+                    vectorstore_data = pickle.load(f)
+                    
         except (ModuleNotFoundError, AttributeError) as e:
             if 'numpy._core' in str(e):
                 print(f"❌ Numpy version compatibility issue: {str(e)}")
@@ -149,6 +161,7 @@ class HanVietVectorStore:
         except Exception as e:
             print(f"❌ Error loading vectorstore: {str(e)}")
             raise
+            
         self.df = vectorstore_data['df']
         self.han_embeddings_phobert = vectorstore_data.get('han_embeddings_phobert')
         self.han_embeddings_labse = vectorstore_data.get('han_embeddings_labse')
