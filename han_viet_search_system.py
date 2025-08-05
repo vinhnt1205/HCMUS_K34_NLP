@@ -134,7 +134,7 @@ class HanVietVectorStore:
         print("Vectorstore saved successfully!")
         
     def load_vectorstore(self, load_path="han_viet_vectorstore.pkl"):
-        """Load vectorstore từ file .pkl hoặc URL"""
+        """Load vectorstore từ file .pkl hoặc URL với memory optimization"""
         print(f"Loading vectorstore from {load_path}...")
         try:
             # Thử load từ URL trước
@@ -162,14 +162,67 @@ class HanVietVectorStore:
             print(f"❌ Error loading vectorstore: {str(e)}")
             raise
             
+        # Memory optimization: Load data step by step
+        print("Loading DataFrame...")
         self.df = vectorstore_data['df']
+        import gc
+        gc.collect()
+        
+        print("Loading PhoBERT embeddings...")
         self.han_embeddings_phobert = vectorstore_data.get('han_embeddings_phobert')
+        gc.collect()
+        
+        print("Loading LaBSE embeddings...")
         self.han_embeddings_labse = vectorstore_data.get('han_embeddings_labse')
+        gc.collect()
+        
+        print("Loading models...")
         self.phobert_tokenizer = vectorstore_data.get('phobert_tokenizer')
         self.phobert_model = vectorstore_data.get('phobert_model')
         self.labse_model = vectorstore_data.get('labse_model')
         self.device = vectorstore_data.get('device', 'cpu')
+        
+        # Force CPU usage for memory optimization
+        if self.phobert_model is not None:
+            self.phobert_model = self.phobert_model.cpu()
+        if self.labse_model is not None:
+            self.labse_model = self.labse_model.cpu()
+        
+        gc.collect()
         print("Vectorstore loaded successfully!")
+        
+    def load_vectorstore_from_data(self, vectorstore_data):
+        """Load vectorstore từ data đã load sẵn (tránh load lại từ URL)"""
+        print("Loading vectorstore from pre-loaded data...")
+        
+        # Memory optimization: Load data step by step
+        print("Loading DataFrame...")
+        self.df = vectorstore_data['df']
+        import gc
+        gc.collect()
+        
+        print("Loading PhoBERT embeddings...")
+        self.han_embeddings_phobert = vectorstore_data.get('han_embeddings_phobert')
+        gc.collect()
+        
+        print("Loading LaBSE embeddings...")
+        self.han_embeddings_labse = vectorstore_data.get('han_embeddings_labse')
+        gc.collect()
+        
+        print("Loading models...")
+        self.phobert_tokenizer = vectorstore_data.get('phobert_tokenizer')
+        self.phobert_model = vectorstore_data.get('phobert_model')
+        self.labse_model = vectorstore_data.get('labse_model')
+        self.device = vectorstore_data.get('device', 'cpu')
+        
+        # Force CPU usage for memory optimization
+        if self.phobert_model is not None:
+            self.phobert_model = self.phobert_model.cpu()
+        if self.labse_model is not None:
+            self.labse_model = self.labse_model.cpu()
+        
+        gc.collect()
+        print("Vectorstore loaded successfully from data!")
         
     def search(self, query_han, top_k=1):
         """Tìm kiếm câu tiếng Việt tương ứng"""

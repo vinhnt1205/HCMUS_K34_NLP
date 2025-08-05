@@ -54,8 +54,8 @@ def initialize_vectorstore():
         gc.collect()  # Clean up memory before loading
         
         vectorstore_instance = HanVietVectorStore(None)
-        # Load trực tiếp từ Hugging Face URL
-        vectorstore_instance.load_vectorstore("https://huggingface.co/datasets/ntvinh12052001/han_viet_vectorstore/resolve/main/han_viet_vectorstore.pkl")
+        # Truyền data đã load sẵn thay vì load lại
+        vectorstore_instance.load_vectorstore_from_data(data)
         
         # Clean up memory after loading
         gc.collect()
@@ -169,6 +169,26 @@ def init_model():
     except Exception as e:
         print(f"Unexpected error in init_model: {str(e)}")
         return jsonify({'status': 'error', 'message': f'Failed to initialize model: {str(e)}'}), 500
+
+@app.route('/api/memory')
+def memory_usage():
+    """API endpoint để kiểm tra memory usage"""
+    import psutil
+    import gc
+    
+    # Force garbage collection
+    gc.collect()
+    
+    # Get memory info
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    
+    return jsonify({
+        'success': True,
+        'memory_usage_mb': round(memory_info.rss / 1024 / 1024, 2),
+        'memory_percent': round(process.memory_percent(), 2),
+        'vectorstore_loaded': vectorstore_instance is not None
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5008))
