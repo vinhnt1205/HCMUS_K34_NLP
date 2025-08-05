@@ -20,7 +20,24 @@ let isSearching = false;
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupInputHandling();
+    checkServerStatus();
 });
+
+async function checkServerStatus() {
+    try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+            console.log('Server is healthy');
+            hideError();
+        } else {
+            console.warn('Server health check failed');
+            showError('Máy chủ đang khởi động, vui lòng đợi...');
+        }
+    } catch (err) {
+        console.warn('Server not ready yet:', err);
+        showError('Máy chủ đang khởi động, vui lòng đợi...');
+    }
+}
 
 function setupEventListeners() {
     // Form submission
@@ -102,9 +119,17 @@ async function handleSearch(e) {
     try {
         // Đầu tiên, khởi tạo model nếu cần
         console.log('Initializing model...');
-        const initResponse = await fetch('/api/init-model');
-        const initData = await initResponse.json();
-        console.log('Model init response:', initData);
+        try {
+            const initResponse = await fetch('/api/init-model');
+            if (!initResponse.ok) {
+                console.warn('Model init failed, continuing with search...');
+            } else {
+                const initData = await initResponse.json();
+                console.log('Model init response:', initData);
+            }
+        } catch (initErr) {
+            console.warn('Model init error, continuing with search:', initErr);
+        }
         
         // Sau đó thực hiện search
         const response = await fetch('/api/search', {
@@ -130,7 +155,13 @@ async function handleSearch(e) {
         
     } catch (err) {
         console.error('Search error:', err.message);
-        showError('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
+        if (err.message.includes('502') || err.message.includes('Bad Gateway')) {
+            showError('Máy chủ đang khởi động, vui lòng thử lại sau 30 giây.');
+        } else if (err.message.includes('Failed to fetch')) {
+            showError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
+        } else {
+            showError('Có lỗi xảy ra: ' + err.message);
+        }
     } finally {
         isSearching = false;
         setSearchingState(false);

@@ -34,10 +34,19 @@ def download_from_huggingface():
         print(f"Downloading {output_file} from Hugging Face Hub...")
         print(f"URL: {hf_url}")
         
-        # Tạo session để handle redirects
+        # Tạo session với timeout
         session = requests.Session()
-        response = session.get(hf_url, stream=True)
+        session.timeout = 300  # 5 phút timeout
+        
+        # Thử download với timeout
+        response = session.get(hf_url, stream=True, timeout=300)
         response.raise_for_status()
+        
+        # Kiểm tra content type
+        content_type = response.headers.get('content-type', '')
+        if 'text/html' in content_type:
+            print("❌ Downloaded file is HTML, not a pickle file!")
+            return False
         
         with open(output_file, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
@@ -47,11 +56,24 @@ def download_from_huggingface():
         if os.path.exists(output_file):
             file_size = os.path.getsize(output_file) / (1024 * 1024)  # MB
             print(f"✅ Downloaded successfully! File size: {file_size:.2f} MB")
-            return True
+            
+            # Validate file ngay sau khi download
+            if validate_pickle_file(output_file):
+                return True
+            else:
+                print("❌ Downloaded file is invalid!")
+                os.remove(output_file)
+                return False
         else:
             print("❌ Download failed!")
             return False
             
+    except requests.exceptions.Timeout:
+        print("❌ Download timeout after 5 minutes")
+        return False
+    except requests.exceptions.ConnectionError:
+        print("❌ Connection error during download")
+        return False
     except Exception as e:
         print(f"❌ Error downloading: {str(e)}")
         return False
