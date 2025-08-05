@@ -1,5 +1,5 @@
-# Sử dụng Python 3.9 làm base image
-FROM python:3.9-slim
+# Sử dụng Python 3.8 làm base image để tương thích tốt hơn
+FROM python:3.8-slim
 
 # Thiết lập working directory
 WORKDIR /app
@@ -14,9 +14,8 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements.txt trước để tận dụng Docker cache
 COPY requirements.txt .
 
-# Cài đặt Python dependencies với numpy version tương thích
-RUN pip install --no-cache-dir numpy==1.21.6 && \
-    pip install --no-cache-dir -r requirements.txt
+# Cài đặt Python dependencies một lần duy nhất
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy toàn bộ source code
 COPY . .
