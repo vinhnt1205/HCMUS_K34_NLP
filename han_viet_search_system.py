@@ -208,6 +208,17 @@ def create_vectorstore(data_path):
 
 def load_and_search(query_han, vectorstore_path="han_viet_vectorstore.pkl"):
     """Load vectorstore và tìm kiếm"""
+    # Kiểm tra xem file có tồn tại không, nếu không thì download
+    if not os.path.exists(vectorstore_path):
+        print(f"Vectorstore file {vectorstore_path} not found. Attempting to download...")
+        try:
+            import download_model
+            download_model.download_from_google_drive()
+        except Exception as e:
+            print(f"Failed to download model: {str(e)}")
+            # Tạo dummy model để tránh crash
+            download_model.create_dummy_model()
+    
     vectorstore = HanVietVectorStore(None)
     vectorstore.load_vectorstore(vectorstore_path)
     return vectorstore.search(query_han)

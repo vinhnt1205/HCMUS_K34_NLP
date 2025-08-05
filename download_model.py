@@ -19,18 +19,58 @@ def download_from_google_drive():
     
     try:
         print(f"Downloading {output_file} from Google Drive...")
-        gdown.download(gdrive_url, output_file, quiet=False)
+        print(f"URL: {gdrive_url}")
         
-        if os.path.exists(output_file):
+        # Thử download với gdown
+        result = gdown.download(gdrive_url, output_file, quiet=False)
+        
+        if result and os.path.exists(output_file):
             file_size = os.path.getsize(output_file) / (1024 * 1024)  # MB
             print(f"✅ Downloaded successfully! File size: {file_size:.2f} MB")
             return True
         else:
-            print("❌ Download failed!")
+            print("❌ Download failed with gdown, trying direct download...")
+            # Thử download trực tiếp
+            return download_direct_from_gdrive(gdrive_url, output_file)
+            
+    except Exception as e:
+        print(f"❌ Error downloading with gdown: {str(e)}")
+        print("Trying direct download...")
+        return download_direct_from_gdrive(gdrive_url, output_file)
+
+def download_direct_from_gdrive(gdrive_url, output_file):
+    """Download trực tiếp từ Google Drive"""
+    try:
+        import requests
+        
+        # Tạo session để handle redirects
+        session = requests.Session()
+        response = session.get(gdrive_url, stream=True)
+        response.raise_for_status()
+        
+        # Kiểm tra nếu file quá lớn (Google Drive warning)
+        if 'drive.google.com' in response.url and 'confirm=' in response.url:
+            # Cần confirm download
+            confirm_token = response.url.split('confirm=')[1].split('&')[0]
+            confirm_url = f"{gdrive_url}&confirm={confirm_token}"
+            response = session.get(confirm_url, stream=True)
+            response.raise_for_status()
+        
+        with open(output_file, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        
+        if os.path.exists(output_file):
+            file_size = os.path.getsize(output_file) / (1024 * 1024)  # MB
+            print(f"✅ Direct download successful! File size: {file_size:.2f} MB")
+            return True
+        else:
+            print("❌ Direct download failed!")
             return False
             
     except Exception as e:
-        print(f"❌ Error downloading: {str(e)}")
+        print(f"❌ Error in direct download: {str(e)}")
         return False
 
 def download_from_direct_url():
