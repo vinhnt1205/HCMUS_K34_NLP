@@ -36,16 +36,20 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Model files (too large for GitHub)
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.model
+*.bin
+
 # Logs
 *.log
 
 # Environment variables
 .env
-
-# Model files (if too large)
-*.pkl
-*.h5
-*.pth
+.env.local
 
 # Temporary files
 *.tmp

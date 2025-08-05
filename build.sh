@@ -3,7 +3,7 @@ echo "=== Build Script for Render ==="
 
 # Cài đặt dependencies
 echo "Installing dependencies..."
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # Tải model trước khi khởi động app
 echo "Downloading model from Hugging Face Hub..."
