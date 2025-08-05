@@ -3,7 +3,7 @@ services:
     name: han-viet-translator
     env: python
     buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1
+    startCommand: gunicorn app_lightweight:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1 --max-requests 1000 --max-requests-jitter 100
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -11,5 +11,8 @@ services:
         value: production
       - key: PYTHONUNBUFFERED
         value: 1
+      - key: PYTHONPATH
+        value: .
     healthCheckPath: /api/health
     autoDeploy: true
+    plan: free
