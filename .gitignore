@@ -31,30 +31,22 @@ ENV/
 .idea/
 *.swp
 *.swo
-*~
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Large model files (will be downloaded separately)
-*.pkl
-*.pth
-*.bin
-*.safetensors
 
 # Logs
 *.log
-logs/
+
+# Environment variables
+.env
+
+# Model files (if too large)
+*.pkl
+*.h5
+*.pth
 
 # Temporary files
 *.tmp
-*.temp
-
-# Docker
-.dockerignore 
+*.temp 

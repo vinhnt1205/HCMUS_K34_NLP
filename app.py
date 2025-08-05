@@ -75,4 +75,5 @@ def health():
     return jsonify({'status': 'healthy'})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5008) 
+    port = int(os.environ.get('PORT', 5008))
+    app.run(debug=False, host='0.0.0.0', port=port) 
