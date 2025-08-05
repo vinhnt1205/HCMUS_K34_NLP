@@ -48,10 +48,16 @@ def initialize_vectorstore():
                     print("❌ Download failed! Model file is required.")
                     return None
         
-        # Load vectorstore một lần duy nhất
-        print("Loading vectorstore...")
+        # Load vectorstore một lần duy nhất với memory optimization
+        print("Loading vectorstore with memory optimization...")
+        import gc
+        gc.collect()  # Clean up memory before loading
+        
         vectorstore_instance = HanVietVectorStore(None)
         vectorstore_instance.load_vectorstore(model_path)
+        
+        # Clean up memory after loading
+        gc.collect()
         print("✅ Vectorstore loaded successfully!")
         
         return vectorstore_instance
