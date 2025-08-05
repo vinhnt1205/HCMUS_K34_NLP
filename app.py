@@ -17,6 +17,30 @@ from han_viet_search_system import load_and_search
 app = Flask(__name__)
 CORS(app)
 
+# Khởi tạo model khi app start
+print("=== Initializing Han-Viet Search System ===")
+try:
+    model_path = "han_viet_vectorstore.pkl"
+    if not os.path.exists(model_path):
+        print("Model file not found, downloading from Hugging Face Hub...")
+        import download_model
+        success = download_model.download_from_huggingface()
+        if not success:
+            print("Download failed, creating dummy model...")
+            download_model.create_dummy_model()
+    else:
+        print("Model file exists, validating...")
+        import download_model
+        if not download_model.validate_pickle_file(model_path):
+            print("Invalid model file, downloading again...")
+            os.remove(model_path)
+            download_model.download_from_huggingface()
+    
+    print("✅ Model initialization completed!")
+except Exception as e:
+    print(f"❌ Error during model initialization: {str(e)}")
+    print("Will try to download model on first request...")
+
 @app.route('/')
 def index():
     """Trang chủ"""

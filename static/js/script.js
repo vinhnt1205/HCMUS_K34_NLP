@@ -129,7 +129,7 @@ async function handleSearch(e) {
         }
         
     } catch (err) {
-        console.error('Search error:', err);
+        console.error('Search error:', err.message);
         showError('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
     } finally {
         isSearching = false;
