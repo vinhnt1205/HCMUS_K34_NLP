@@ -62,6 +62,17 @@ Sau khi deploy thành công, bạn sẽ nhận được URL như:
 
 ## Chạy locally
 
+### Cách 1: Sử dụng Docker (Recommended)
+```bash
+# Build và run với Docker
+./docker-build.sh
+
+# Hoặc thủ công
+docker build -t han-viet-translator .
+docker-compose up -d
+```
+
+### Cách 2: Chạy trực tiếp
 ```bash
 # Cài đặt dependencies
 pip install -r requirements.txt
