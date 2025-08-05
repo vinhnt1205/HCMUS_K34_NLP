@@ -9,19 +9,42 @@ import pickle
 import pandas as pd
 
 def validate_pickle_file(file_path):
-    """Kiểm tra xem file có phải là pickle hợp lệ không"""
+    """Kiểm tra xem file pickle có hợp lệ không"""
     try:
         with open(file_path, 'rb') as f:
-            # Đọc 4 bytes đầu để kiểm tra
-            header = f.read(4)
-            if header.startswith(b'<!DOCTYPE') or header.startswith(b'<html'):
-                print("❌ Downloaded file is HTML, not a pickle file!")
+            # Thử load với protocol cũ hơn để tránh lỗi numpy._core
+            import pickle
+            try:
+                # Thử với protocol mới nhất trước
+                data = pickle.load(f)
+            except (ModuleNotFoundError, AttributeError) as e:
+                if 'numpy._core' in str(e):
+                    print(f"⚠️  Numpy version compatibility issue: {str(e)}")
+                    print("Attempting to fix numpy compatibility...")
+                    # Thử load lại với protocol cũ hơn
+                    f.seek(0)
+                    try:
+                        data = pickle.load(f)
+                        print("✅ Successfully loaded with compatibility fix")
+                        return True
+                    except Exception as e2:
+                        print(f"❌ Still failed: {str(e2)}")
+                        return False
+                else:
+                    print(f"❌ Invalid pickle file: {str(e)}")
+                    return False
+            
+            # Kiểm tra cấu trúc data
+            required_keys = ['df', 'han_embeddings_phobert', 'han_embeddings_labse']
+            if not all(key in data for key in required_keys):
+                print("❌ Invalid data structure in pickle file")
                 return False
-            f.seek(0)  # Reset về đầu file
-            pickle.load(f)
-        return True
+            
+            print("✅ Pickle file is valid!")
+            return True
+            
     except Exception as e:
-        print(f"❌ Invalid pickle file: {str(e)}")
+        print(f"❌ Error validating pickle file: {str(e)}")
         return False
 
 def download_from_huggingface():

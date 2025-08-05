@@ -8,13 +8,15 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements.txt trước để tận dụng Docker cache
 COPY requirements.txt .
 
-# Cài đặt Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Cài đặt Python dependencies với numpy version tương thích
+RUN pip install --no-cache-dir numpy==1.21.6 && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy toàn bộ source code
 COPY . .
