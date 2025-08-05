@@ -1,141 +1,113 @@
-# Hệ thống Tìm kiếm Hán-Việt
+# Hán-Việt Search System
 
-Ứng dụng Flask API để tìm kiếm và dịch thuật văn bản Hán-Việt sử dụng các mô hình AI.
+Hệ thống tìm kiếm và dịch thuật Hán-Việt sử dụng AI, đặc biệt cho y học cổ truyền.
 
 ## Tính năng
 
-- Tìm kiếm semantic cho văn bản Hán
-- Dịch thuật Hán-Việt
-- API RESTful
-- Giao diện web
-- Tối ưu hóa hiệu suất với vectorstore caching
+- Tìm kiếm và dịch thuật câu tiếng Hán sang tiếng Việt
+- Sử dụng Sentence Transformers và Transformers
+- API RESTful với Flask
+- Giao diện web thân thiện
 
-## Cài đặt và Chạy với Docker
-
-### 1. Build Docker Image
-
-```bash
-docker build -t han-viet-search .
-```
-
-### 2. Chạy với Docker Compose (Khuyến nghị)
-
-```bash
-docker-compose up -d
-```
-
-### 3. Chạy với Docker trực tiếp
-
-```bash
-docker run -d \
-  --name han-viet-search-app \
-  -p 5008:5008 \
-  -v $(pwd)/models:/app/models \
-  han-viet-search
-```
-
-## Sử dụng
-
-### Truy cập Web Interface
-```
-http://localhost:5008
-```
-
-### API Endpoints
-
-#### Health Check
-```bash
-curl http://localhost:5008/api/health
-```
-
-#### Tìm kiếm
-```bash
-curl -X POST http://localhost:5008/api/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "鎮驚安神"}'
-```
-
-#### Khởi tạo Model
-```bash
-curl http://localhost:5008/api/init-model
-```
-
-## Cấu trúc Project
-
-```
-.
-├── app.py                          # Flask application
-├── han_viet_search_system.py       # Core search system
-├── download_model.py               # Model download utilities
-├── requirements.txt                # Python dependencies
-├── Dockerfile                      # Docker configuration
-├── docker-compose.yml             # Docker Compose configuration
-├── .dockerignore                   # Docker ignore rules
-├── templates/                      # HTML templates
-├── static/                         # Static files (CSS, JS)
-└── models/                         # Model files (mounted volume)
-```
-
-## Environment Variables
-
-- `PYTHONPATH`: Path to Python modules
-- `FLASK_APP`: Flask application file
-- `FLASK_ENV`: Environment (production/development)
-- `PORT`: Port number (default: 5008)
-
-## Monitoring
-
-### Health Check
-Container có health check tự động kiểm tra trạng thái API mỗi 30 giây.
-
-### Logs
-```bash
-# Xem logs
-docker-compose logs -f
-
-# Hoặc với Docker trực tiếp
-docker logs -f han-viet-search-app
-```
-
-## Troubleshooting
-
-### 1. Model không load được
-```bash
-# Kiểm tra API init-model
-curl http://localhost:5008/api/init-model
-```
-
-### 2. Container không start
-```bash
-# Kiểm tra logs
-docker logs han-viet-search-app
-```
-
-### 3. Memory issues
-Tăng memory limit trong docker-compose.yml:
-```yaml
-deploy:
-  resources:
-    limits:
-      memory: 8G
-```
-
-## Performance
-
-- Vectorstore được load một lần khi khởi động
-- Caching để tăng tốc độ phản hồi
-- Memory optimization cho production
-
-## Development
+## Cài đặt
 
 ### Local Development
+
+1. Clone repository:
+```bash
+git clone <repository-url>
+cd CK_2
+```
+
+2. Tạo virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# hoặc
+venv\Scripts\activate  # Windows
+```
+
+3. Cài đặt dependencies:
 ```bash
 pip install -r requirements.txt
+```
+
+4. Chạy ứng dụng:
+```bash
 python app.py
 ```
 
-### Rebuild Docker Image
-```bash
-docker-compose build --no-cache
-docker-compose up -d
-``` 
+Ứng dụng sẽ chạy tại `http://localhost:5008`
+
+## Deployment trên Render
+
+### Cách 1: Sử dụng render.yaml (Recommended)
+
+1. Push code lên GitHub
+2. Kết nối repository với Render
+3. Render sẽ tự động detect `render.yaml` và deploy
+
+### Cách 2: Manual Setup
+
+1. Tạo Web Service trên Render
+2. Connect với GitHub repository
+3. Cấu hình:
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `python app.py`
+   - **Environment Variables**:
+     - `PYTHON_VERSION`: `3.11`
+     - `PORT`: `5008`
+
+## API Endpoints
+
+### Health Check
+```
+GET /api/health
+```
+
+### Search
+```
+POST /api/search
+Content-Type: application/json
+
+{
+  "query": "你好"
+}
+```
+
+### Initialize Model
+```
+GET /api/init-model
+```
+
+## Cấu trúc dự án
+
+```
+CK_2/
+├── app.py                 # Flask application
+├── han_viet_search_system.py  # Core search logic
+├── download_model.py      # Model download utility
+├── requirements.txt       # Python dependencies
+├── Dockerfile            # Docker configuration
+├── render.yaml           # Render deployment config
+├── static/               # Static files (CSS, JS)
+├── templates/            # HTML templates
+└── han_viet_vectorstore.pkl  # Model file (2.36GB)
+```
+
+## Dependencies
+
+- Flask==2.3.3
+- Flask-Cors==4.0.0
+- requests==2.31.0
+- pandas==2.0.3
+- torch==2.0.1
+- numpy==1.24.3
+- sentence-transformers==2.2.2
+- transformers==4.30.2
+
+## Lưu ý
+
+- Model file (2.36GB) sẽ được tự động download từ Hugging Face Hub
+- Cần ít nhất 4GB RAM để chạy ứng dụng
+- Build time có thể mất 10-15 phút do download model file 

@@ -134,18 +134,28 @@ class HanVietVectorStore:
         print("Vectorstore saved successfully!")
         
     def load_vectorstore(self, load_path="han_viet_vectorstore.pkl"):
-        """Load vectorstore"""
+        """Load vectorstore - chỉ dùng file .pkl, lỗi là dừng, không tạo gì khác"""
         print(f"Loading vectorstore from {load_path}...")
-        with open(load_path, 'rb') as f:
-            vectorstore_data = pickle.load(f)
-        
+        try:
+            with open(load_path, 'rb') as f:
+                vectorstore_data = pickle.load(f)
+        except (ModuleNotFoundError, AttributeError) as e:
+            if 'numpy._core' in str(e):
+                print(f"❌ Numpy version compatibility issue: {str(e)}")
+                raise RuntimeError("Không thể load file .pkl do lỗi numpy._core. Hãy tạo lại file .pkl đúng version numpy!")
+            else:
+                print(f"❌ Error loading pickle file: {str(e)}")
+                raise
+        except Exception as e:
+            print(f"❌ Error loading vectorstore: {str(e)}")
+            raise
         self.df = vectorstore_data['df']
-        self.han_embeddings_phobert = vectorstore_data['han_embeddings_phobert']
-        self.han_embeddings_labse = vectorstore_data['han_embeddings_labse']
-        self.phobert_tokenizer = vectorstore_data['phobert_tokenizer']
-        self.phobert_model = vectorstore_data['phobert_model']
-        self.labse_model = vectorstore_data['labse_model']
-        self.device = vectorstore_data['device']
+        self.han_embeddings_phobert = vectorstore_data.get('han_embeddings_phobert')
+        self.han_embeddings_labse = vectorstore_data.get('han_embeddings_labse')
+        self.phobert_tokenizer = vectorstore_data.get('phobert_tokenizer')
+        self.phobert_model = vectorstore_data.get('phobert_model')
+        self.labse_model = vectorstore_data.get('labse_model')
+        self.device = vectorstore_data.get('device', 'cpu')
         print("Vectorstore loaded successfully!")
         
     def search(self, query_han, top_k=1):
@@ -255,19 +265,9 @@ def create_vectorstore(data_path):
     return vectorstore
 
 def load_and_search(query_han, vectorstore_path="han_viet_vectorstore.pkl"):
-    """Load vectorstore và tìm kiếm"""
-    # Kiểm tra xem file có tồn tại không
+    """Load vectorstore và tìm kiếm - chỉ dùng file .pkl, lỗi là dừng"""
     if not os.path.exists(vectorstore_path):
-        print(f"Vectorstore file {vectorstore_path} not found. Downloading...")
-        try:
-            import download_model
-            # Thử download từ Hugging Face Hub
-            download_model.download_from_huggingface()
-        except Exception as e:
-            print(f"Failed to download model: {str(e)}")
-            # Tạo dummy model để tránh crash
-            download_model.create_dummy_model()
-    
+        raise FileNotFoundError(f"Vectorstore file {vectorstore_path} not found. Hãy upload đúng file .pkl!")
     vectorstore = HanVietVectorStore(None)
     vectorstore.load_vectorstore(vectorstore_path)
     return vectorstore.search(query_han)

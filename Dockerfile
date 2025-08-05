@@ -1,32 +1,34 @@
-# Sử dụng Python 3.8 làm base image để tương thích tốt hơn
-FROM python:3.8-slim
+# Sử dụng Python 3.11 slim image
+FROM python:3.11-slim
 
-# Thiết lập working directory
+# Set working directory
 WORKDIR /app
 
-# Cài đặt system dependencies cần thiết
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements.txt trước để tận dụng Docker cache
+# Copy requirements first for better caching
 COPY requirements.txt .
 
-# Cài đặt Python dependencies một lần duy nhất
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy toàn bộ source code
+# Copy application files
 COPY . .
 
-# Tạo thư mục để lưu model nếu chưa có
+# Create directory for model files
 RUN mkdir -p /app/models
+
+# Download model file during build (optional - can also download at runtime)
+RUN python download_model.py
 
 # Expose port
 EXPOSE 5008
 
-# Thiết lập environment variables
+# Set environment variables
 ENV PYTHONPATH=/app
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
@@ -35,5 +37,5 @@ ENV FLASK_ENV=production
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5008/api/health || exit 1
 
-# Command để chạy ứng dụng
+# Run the application
 CMD ["python", "app.py"] 

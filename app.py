@@ -35,15 +35,18 @@ def initialize_vectorstore():
             import download_model
             success = download_model.download_from_huggingface()
             if not success:
-                print("Download failed, creating dummy model...")
-                download_model.create_dummy_model()
+                print("❌ Download failed! Model file is required.")
+                return None
         else:
             print("Model file exists, validating...")
             import download_model
             if not download_model.validate_pickle_file(model_path):
                 print("Invalid model file, downloading again...")
                 os.remove(model_path)
-                download_model.download_from_huggingface()
+                success = download_model.download_from_huggingface()
+                if not success:
+                    print("❌ Download failed! Model file is required.")
+                    return None
         
         # Load vectorstore một lần duy nhất
         print("Loading vectorstore...")
